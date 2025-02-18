@@ -29,13 +29,23 @@ const NavigationStack = ({unmountedStyle, mountedStyle, crumbedStyle, unmountSty
       
       transStyle[`${type}${suffix}` as StyleProperty] = value;
     }
-    const convertTrans = ({type, start, from, startX, fromX, startY, fromY, items}) => {
+    const convertTrans = ({type, start, from, startX, fromX, startY, fromY, items}: {
+      type: BaseTransform;
+      start?: string | number;
+      from?: string | number;
+      startX?: string | number;
+      fromX?: string | number;
+      startY?: string | number;
+      fromY?: string | number;
+      items?: any[];
+    }) => {
       if (type === 'translate' || type === 'scale') {
-        addStyle(`${type}X` as TransformProperty, startX ?? fromX);
-        addStyle(`${type}Y` as TransformProperty, startY ?? fromY);
+        const axisType = type as 'translate' | 'scale';
+        addStyle(`${axisType}X` as TransformProperty, startX ?? fromX);
+        addStyle(`${axisType}Y` as TransformProperty, startY ?? fromY);
       }
       // can do pivot? transform origin?
-      if (type === 'alpha' || type === 'rotate') addStyle(type as BaseTransform, start ?? from);
+      if (type === 'alpha' || type === 'rotate') addStyle(type, start ?? from);
       items?.forEach(convertTrans);
     };
     convertTrans(trans);
