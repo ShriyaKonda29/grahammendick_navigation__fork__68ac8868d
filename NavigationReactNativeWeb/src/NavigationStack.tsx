@@ -14,18 +14,28 @@ const NavigationStack = ({unmountedStyle, mountedStyle, crumbedStyle, unmountSty
   const getStyle = (trans) => {
     trans = !Array.isArray(trans) ? trans : {items: trans};
     const transStyle = {...emptyStyle};
-    const addStyle = (type: string, start: string | number) => {
+    type StyleValue = string | number;
+    type BaseTransform = 'translate' | 'scale' | 'alpha' | 'rotate';
+    type TransformAxis = 'X' | 'Y' | '';
+    type TransformProperty = `${BaseTransform}${TransformAxis}`;
+    type StyleProperty = `${TransformProperty}${'' | '_pc'}`;
+
+    const addStyle = (type: BaseTransform | TransformProperty, start: StyleValue) => {
       if (start === undefined) return;
-      const percent = typeof start === 'string' && start.endsWith('%')
-      transStyle[type + (percent ? '_pc' : '')] = percent ? +(start as string).slice(0, -1) : +start;
+      
+      const isPercentage = typeof start === 'string' && start.endsWith('%');
+      const suffix = isPercentage ? '_pc' : '';
+      const value = isPercentage ? Number(start.slice(0, -1)) : Number(start);
+      
+      transStyle[`${type}${suffix}` as StyleProperty] = value;
     }
     const convertTrans = ({type, start, from, startX, fromX, startY, fromY, items}) => {
       if (type === 'translate' || type === 'scale') {
-        addStyle(`${type}X`, startX ?? fromX);
-        addStyle(`${type}Y`, startY ?? fromY);
+        addStyle(`${type}X` as TransformProperty, startX ?? fromX);
+        addStyle(`${type}Y` as TransformProperty, startY ?? fromY);
       }
       // can do pivot? transform origin?
-      if (type === 'alpha' || type === 'rotate') addStyle(type, start ?? from);
+      if (type === 'alpha' || type === 'rotate') addStyle(type as BaseTransform, start ?? from);
       items?.forEach(convertTrans);
     };
     convertTrans(trans);
