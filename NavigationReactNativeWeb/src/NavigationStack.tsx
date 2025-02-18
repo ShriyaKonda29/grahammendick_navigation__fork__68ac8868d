@@ -14,15 +14,35 @@ const NavigationStack = ({unmountedStyle, mountedStyle, crumbedStyle, unmountSty
   const getStyle = (trans) => {
     trans = !Array.isArray(trans) ? trans : {items: trans};
     const transStyle = {...emptyStyle};
-    const addStyle = (type: string, start: string | number) => {
+    type StyleValue = string | number;
+    type BaseTransform = 'translate' | 'scale' | 'alpha' | 'rotate';
+    type TransformAxis = 'X' | 'Y' | '';
+    type TransformProperty = `${BaseTransform}${TransformAxis}`;
+    type StyleProperty = `${TransformProperty}${'' | '_pc'}`;
+
+    const addStyle = (type: BaseTransform | TransformProperty, start: StyleValue) => {
       if (start === undefined) return;
-      const percent = typeof start === 'string' && start.endsWith('%')
-      transStyle[type + (percent ? '_pc' : '')] = percent ? +(start as string).slice(0, -1) : +start;
+      
+      const isPercentage = typeof start === 'string' && start.endsWith('%');
+      const suffix = isPercentage ? '_pc' : '';
+      const value = isPercentage ? Number(start.slice(0, -1)) : Number(start);
+      
+      transStyle[`${type}${suffix}` as StyleProperty] = value;
     }
-    const convertTrans = ({type, start, from, startX, fromX, startY, fromY, items}) => {
+    const convertTrans = ({type, start, from, startX, fromX, startY, fromY, items}: {
+      type: BaseTransform;
+      start?: string | number;
+      from?: string | number;
+      startX?: string | number;
+      fromX?: string | number;
+      startY?: string | number;
+      fromY?: string | number;
+      items?: any[];
+    }) => {
       if (type === 'translate' || type === 'scale') {
-        addStyle(`${type}X`, startX ?? fromX);
-        addStyle(`${type}Y`, startY ?? fromY);
+        const axisType = type as 'translate' | 'scale';
+        addStyle(`${axisType}X` as TransformProperty, startX ?? fromX);
+        addStyle(`${axisType}Y` as TransformProperty, startY ?? fromY);
       }
       // can do pivot? transform origin?
       if (type === 'alpha' || type === 'rotate') addStyle(type, start ?? from);
